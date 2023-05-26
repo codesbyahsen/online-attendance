@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreAttendanceRequest;
 use App\Models\Attendance;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -16,19 +17,12 @@ class AttendanceController extends Controller
     {
         $attendances = null;
         if (isset($date) && !empty($date)) {
-            $attendances = Attendance::where('date', $date)->with('user')->get(['date', 'status']);
+            $attendances = Attendance::where('date', $date)->with('user')->get();
         }
-        $attendances = Attendance::with('user')->get(['date', 'status']);
+        $attendances = Attendance::with('user')->get();
+        $users = User::get(['id', 'name']);
 
-        // return view(compact('attendances'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // return view();
+        return view('attendance', compact('attendances', 'users'));
     }
 
     /**
@@ -36,9 +30,12 @@ class AttendanceController extends Controller
      */
     public function store(StoreAttendanceRequest $request)
     {
-        $date = now()->format('d-m-Y');
-        $attendance = array_merge($request->validated(), ['user_id' => Auth::id(), 'date' => $date]);
-        $result = Attendance::create($attendance);
+        $date = now()->format('Y-m-d');
+        $attendance = array_merge($request->validated(), ['date' => $date]);
+        $result = Attendance::updateOrCreate(
+            ['user_id' => $attendance['user_id'], 'date' => $attendance['date']],
+            $attendance
+        );
         if (!$result) {
             return back('error', 'Failed to mark attendance, try again!');
         }

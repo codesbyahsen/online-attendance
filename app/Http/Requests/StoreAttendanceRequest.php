@@ -23,7 +23,15 @@ class StoreAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'user_id' => ['required'],
             'status' => ['required', 'in:' . Attendance::STATUS_PRESENT . ',' . Attendance::STATUS_ABSENT]
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'user_id.required' => 'The name field is required.'
         ];
     }
 }
