@@ -13,16 +13,35 @@ class AttendanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index($date = null)
+    public function index()
+    {
+        $users = User::whereNot('role', User::ROLE_ADMIN)->get(['id', 'name']);
+
+        return view('attendance', compact('users'));
+    }
+
+    public function getAttendances($date = null)
     {
         $attendances = null;
-        if (isset($date) && !empty($date)) {
-            $attendances = Attendance::where('date', $date)->with('user')->get();
-        }
-        $attendances = Attendance::with('user')->get();
-        $users = User::get(['id', 'name']);
+        // role based checking
+        if (Auth::user()->role == User::ROLE_ADMIN):
+            if (!$date) {
+                $attendances = Attendance::with('user')->get();
+            } else {
+                $attendances = Attendance::where('date', $date)->with('user')->get();
+            }
+        else:
+            if (!$date) {
+                $attendances = Attendance::where('user_id', Auth::id())->with('user')->get();
+            } else {
+                $attendances = Attendance::where('user_id', Auth::id())->whereDate('date', $date)->with('user')->get();
+            }
+        endif;
 
-        return view('attendance', compact('attendances', 'users'));
+        if (!$attendances) {
+            return response()->json(['success' => false, 'message' => 'Attendance data not fetched.', 'data' => []]);
+        }
+        return response()->json(['success' => true, 'data' => $attendances], 200);
     }
 
     /**
@@ -37,9 +56,9 @@ class AttendanceController extends Controller
             $attendance
         );
         if (!$result) {
-            return back('error', 'Failed to mark attendance, try again!');
+            return response()->json(['success' => false, 'message' => 'Failed to mark attendance, try again!']);
         }
-        return redirect()->route('attendances')->with('success', 'Attendance marked successfully.');
+        return response()->json(['success' => true, 'message' => 'Attendance marked successfully.'], 200);
     }
 
     /**

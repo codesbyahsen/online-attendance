@@ -30,7 +30,8 @@ Route::middleware('auth')->group(function () {
 
     # attendance
     Route::controller(AttendanceController::class)->prefix('attendances')->group(function () {
-        Route::get('/{date?}', 'index')->name('attendances');
+        Route::get('/', 'index')->name('attendances');
+        Route::get('/list/{date?}', 'getAttendances')->name('attendances.list');
         Route::post('/store', 'store')->name('attendances.store');
     });
 });
