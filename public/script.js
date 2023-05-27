@@ -1,3 +1,8 @@
+// Initialising DataTable
+$(document).ready( function () {
+    $('#attendance-table').DataTable();
+} );
+
 /**
  * fetch attendance with date filter
  * and without filter
